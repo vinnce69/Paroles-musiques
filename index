@@ -724,12 +724,12 @@
 
         const CHANSONS = [
             {
-                titre: "Des pieds et des mains (Veridis Remix)",
-                artiste: "NeS (Veridis Project)",
+                titre: "La lune attire la mer (Veridis Remix)",
+                artiste: "Alpha Wann (Veridis Project)",
                 // Pour passer sur ton vrai fichier, remplace "demo" par "mp3" ou "mp4"
                 // et indique son chemin dans fichierMedia (ex: "medias/nes-des-pieds-et-des-mains.mp3")
-                typeMedia: "demo",
-                fichierMedia: "medias/nes-des-pieds-et-des-mains.mp3",
+                typeMedia: "mp4",
+                fichierMedia: "medias/XXXXX",
                 pochetteUrl: "",
                 couleurPochette: "#1db954",
                 tirageAleatoire: true,
