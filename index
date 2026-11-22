@@ -729,7 +729,7 @@
                 // Pour passer sur ton vrai fichier, remplace "demo" par "mp3" ou "mp4"
                 // et indique son chemin dans fichierMedia (ex: "medias/nes-des-pieds-et-des-mains.mp3")
                 typeMedia: "mp4",
-                fichierMedia: "medias/XXXXX",
+                fichierMedia: "media/Alpha Wann - La Lune Attire la Mer (REMIX).mp4",
                 pochetteUrl: "",
                 couleurPochette: "#1db954",
                 tirageAleatoire: true,
