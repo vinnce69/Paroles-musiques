@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- Indispensable pour l'adaptation sur téléphone (empêche le zoom involontaire au clic) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notre Playlist Quiz ✨ (QCM & Radar)</title>
+
+    <style>
+        /* =====================================================================
+           1. PERSONNALISATION DU DESIGN (AMBIANCE CHALEUREUSE & ROMANTIQUE)
+           ===================================================================== */
+        :root {
+            --couleur-fond: #181014;            /* Fond cacao / prune très doux et chaleureux */
+            --fond-carte: #24181e;              /* Fond des cartes velours sombre */
+            --couleur-bordure: #3d2833;         /* Bordures rose poudré sombre */
+            --couleur-principale: #fb7185;      /* Rose corail chaleureux */
+            --couleur-principale-claire: #fda4af;
+            --couleur-repere-pause: #fbbf24;    /* Doré miel chaleureux */
+            --couleur-radar: #f472b6;           /* Rose bonbon / magenta doux pour le Radar */
+            --couleur-texte: #fff1f2;           /* Blanc cassé rosé très doux */
+            --couleur-texte-doux: #d6b8c0;      /* Gris rosé chaleureux */
+            
+            /* Couleurs pour les réponses du quiz */
+            --couleur-succes: #34d399;          /* Vert menthe doux */
+            --couleur-erreur: #fb7185;          /* Corail doux */
+            --couleur-alerte: #fbbf24;          /* Ambre doré */
+            
+            --arrondi: 24px;                    /* Arrondi plus généreux et mignon */
+        }
+
+        /* =====================================================================
+           2. STYLE GÉNÉRAL & ADAPTATION MOBILE-FIRST
+           ===================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Nunito", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at top left, #2d1822 0%, #181014 55%, #1f1410 100%);
+            color: var(--couleur-texte);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 18px;
+            line-height: 1.55;
+        }
+
+        .conteneur {
+            width: 100%;
+            max-width: 580px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(36, 24, 30, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 14px 20px;
+            border-radius: var(--arrondi);
+            border: 1px solid var(--couleur-bordure);
+            box-shadow: 0 8px 24px rgba(251, 113, 133, 0.08);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.12rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--couleur-principale-claire);
+        }
+
+        .badge-score {
+            background: rgba(251, 113, 133, 0.16);
+            color: var(--couleur-principale-claire);
+            border: 1px solid rgba(251, 113, 133, 0.45);
+            padding: 6px 15px;
+            border-radius: 99px;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .carte {
+            background: var(--fond-carte);
+            border: 1px solid var(--couleur-bordure);
+            border-radius: var(--arrondi);
+            padding: 22px 20px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 228, 230, 0.03) inset;
+        }
+
+        .cache {
+            display: none !important;
+        }
+
+        /* =====================================================================
+           3. LECTEUR HYBRIDE (VIDÉO MP4 16:9 OU POCHETTE ALBUM + ÉGALISEUR)
+           ===================================================================== */
+        .scene-media {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #120b0e;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid var(--couleur-bordure);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scene-audio {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .halo-arriere-plan {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle at 28% 30%, rgba(251, 113, 133, 0.45), transparent 60%),
+                        radial-gradient(circle at 75% 70%, rgba(251, 191, 36, 0.32), transparent 60%);
+            filter: blur(22px);
+            transform: scale(1.1);
+            transition: transform 0.6s ease, opacity 0.6s ease;
+            z-index: 1;
+        }
+
+        .scene-audio.en-lecture .halo-arriere-plan {
+            animation: pulsationHalo 3.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulsationHalo {
+            0% { transform: scale(1.05) rotate(0deg); opacity: 0.75; }
+            100% { transform: scale(1.22) rotate(6deg); opacity: 1; }
+        }
+
+        .contenu-pochette {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .cadre-pochette {
+            width: 108px;
+            height: 108px;
+            border-radius: 18px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 228, 230, 0.18);
+            background: #2b1d24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cadre-pochette img,
+        .cadre-pochette svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .infos-audio-scene {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .badge-mode-media {
+            display: inline-flex;
+            align-self: flex-start;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 99px;
+            background: rgba(255, 228, 230, 0.14);
+            color: #ffe4e6;
+        }
+
+        .egaliseur {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 30px;
+            margin-top: 2px;
+        }
+
+        .barre-eq {
+            width: 5px;
+            height: 6px;
+            background: linear-gradient(180deg, #fda4af, #fb7185);
+            border-radius: 99px;
+            transition: height 0.15s ease;
+        }
+
+        .scene-audio.en-lecture .barre-eq {
+            animation: danseEgaliseur 0.7s ease-in-out infinite alternate;
+        }
+
+        .scene-audio.en-lecture .barre-eq:nth-child(1) { animation-duration: 0.55s; animation-delay: 0.05s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(2) { animation-duration: 0.75s; animation-delay: 0.20s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(3) { animation-duration: 0.48s; animation-delay: 0.10s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(4) { animation-duration: 0.82s; animation-delay: 0.30s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(5) { animation-duration: 0.60s; animation-delay: 0.15s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(6) { animation-duration: 0.70s; animation-delay: 0.25s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(7) { animation-duration: 0.52s; animation-delay: 0.08s; }
+        .scene-audio.en-lecture .barre-eq:nth-child(8) { animation-duration: 0.68s; animation-delay: 0.18s; }
+
+        @keyframes danseEgaliseur {
+            0% { height: 6px; opacity: 0.65; }
+            100% { height: 28px; opacity: 1; }
+        }
+
+        .overlay-pause {
+            position: absolute;
+            inset: 0;
+            background: rgba(24, 16, 20, 0.84);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 16px;
+            gap: 6px;
+        }
+
+        /* =====================================================================
+           4. BARRE DE PROGRESSION (REPÈRES QCM & CURSEURS / ZONES RADAR)
+           ===================================================================== */
+        .bloc-chronometre {
+            margin-top: 18px;
+        }
+
+        .ligne-temps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: var(--couleur-texte-doux);
+            margin-bottom: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .piste-progression {
+            position: relative;
+            width: 100%;
+            height: 12px;
+            background: var(--couleur-bordure);
+            border-radius: 99px;
+            overflow: visible;
+        }
+
+        .remplissage-progression {
+            position: relative;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #fb7185, #fbbf24);
+            border-radius: 99px;
+            transition: width 0.1s linear;
+            z-index: 2;
+        }
+
+        .conteneur-reperes {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* Repères QCM */
+        .repere-pause {
+            position: absolute;
+            top: -4px;
+            width: 4px;
+            height: 20px;
+            background: var(--couleur-repere-pause);
+            border-radius: 3px;
+            box-shadow: 0 0 8px var(--couleur-repere-pause);
+            transform: translateX(-50%);
+            transition: opacity 0.3s ease, background 0.3s ease;
+        }
+
+        .repere-pause::after {
+            content: "💭";
+            position: absolute;
+            top: -21px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.74rem;
+        }
+
+        .repere-pause.passe {
+            background: var(--couleur-succes);
+            box-shadow: none;
+            opacity: 0.65;
+        }
+
+        .repere-pause.passe::after {
+            content: "💖";
+            font-size: 0.72rem;
+        }
+
+        /* Zones cibles révélées en mode Radar lors de la correction */
+        .zone-cible-radar {
+            position: absolute;
+            top: -2px;
+            height: 16px;
+            background: rgba(52, 211, 153, 0.35);
+            border: 1px solid var(--couleur-succes);
+            border-radius: 6px;
+            z-index: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Curseurs placés par le joueur en mode Radar */
+        .curseur-joueur {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 22px;
+            background: var(--couleur-radar);
+            border-radius: 3px;
+            box-shadow: 0 0 8px var(--couleur-radar);
+            transform: translateX(-50%);
+            z-index: 4;
+        }
+
+        .curseur-joueur::after {
+            content: "💗";
+            position: absolute;
+            top: -21px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.78rem;
+        }
+
+        .curseur-joueur.valide {
+            background: var(--couleur-succes);
+            box-shadow: 0 0 8px var(--couleur-succes);
+        }
+
+        .curseur-joueur.valide::after {
+            content: "✅";
+        }
+
+        .curseur-joueur.rate {
+            background: var(--couleur-erreur);
+            box-shadow: 0 0 8px var(--couleur-erreur);
+        }
+
+        .curseur-joueur.rate::after {
+            content: "❌";
+        }
+
+        /* =====================================================================
+           5. ZONE SPÉCIFIQUE AU MODE RADAR (BUZZER À CURSEURS)
+           ===================================================================== */
+        .carte-radar {
+            border-color: rgba(244, 114, 182, 0.45);
+            background: linear-gradient(180deg, rgba(244, 114, 182, 0.08) 0%, var(--fond-carte) 100%);
+        }
+
+        .btn-radar-action {
+            width: 100%;
+            min-height: 70px;
+            background: linear-gradient(135deg, #fb7185, #ec4899);
+            color: #ffffff;
+            font-family: inherit;
+            font-weight: 900;
+            font-size: 1.08rem;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
+            transition: transform 0.12s ease, filter 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .btn-radar-action:active {
+            transform: scale(0.95);
+            filter: brightness(1.12);
+        }
+
+        .liste-tags-curseurs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tag-curseur {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(244, 114, 182, 0.16);
+            border: 1px solid rgba(244, 114, 182, 0.45);
+            color: #fce7f3;
+            padding: 5px 11px;
+            border-radius: 99px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tag-curseur.valide {
+            background: rgba(52, 211, 153, 0.2);
+            border-color: var(--couleur-succes);
+            color: #d1fae5;
+        }
+
+        .tag-curseur.rate {
+            background: rgba(251, 113, 133, 0.2);
+            border-color: var(--couleur-erreur);
+            color: #ffe4e6;
+        }
+
+        .btn-suppr-curseur {
+            background: none;
+            border: none;
+            color: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 0 2px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .item-correction-radar {
+            background: rgba(255, 228, 230, 0.05);
+            border: 1px solid var(--couleur-bordure);
+            border-radius: 14px;
+            padding: 12px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* =====================================================================
+           6. BOUTONS TACTILES & CHOIX DE RÉPONSES QCM
+           ===================================================================== */
+        .btn-principal {
+            width: 100%;
+            min-height: 54px;
+            background: linear-gradient(135deg, #fb7185, #f43f5e);
+            color: #ffffff;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 1.02rem;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(244, 63, 94, 0.28);
+            transition: transform 0.15s ease, filter 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-principal:hover {
+            filter: brightness(1.08);
+        }
+
+        .btn-principal:active {
+            transform: scale(0.97);
+        }
+
+        .btn-secondaire {
+            width: 100%;
+            min-height: 48px;
+            background-color: rgba(255, 228, 230, 0.05);
+            color: var(--couleur-texte);
+            border: 1px solid var(--couleur-bordure);
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.92rem;
+            padding: 10px 14px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-secondaire:hover {
+            border-color: var(--couleur-principale-claire);
+            background: rgba(251, 113, 133, 0.1);
+        }
+
+        .btn-secondaire:active {
+            transform: scale(0.97);
+        }
+
+        .barre-controles {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 440px) {
+            .barre-controles {
+                grid-template-columns: 1fr 1fr;
+            }
+            .barre-controles #btn-passer-question {
+                grid-column: span 2;
+            }
+        }
+
+        .liste-morceaux-accueil {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            margin: 18px 0 22px 0;
+            text-align: left;
+        }
+
+        .carte-morceau-choix {
+            width: 100%;
+            min-height: 68px;
+            background: rgba(255, 228, 230, 0.04);
+            border: 1px solid var(--couleur-bordure);
+            border-radius: 18px;
+            padding: 14px 16px;
+            color: var(--couleur-texte);
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .carte-morceau-choix:hover {
+            border-color: var(--couleur-principale);
+            background: rgba(251, 113, 133, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .badge-type-jeu {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 9px;
+            border-radius: 99px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .badge-type-jeu.qcm {
+            background: rgba(251, 191, 36, 0.18);
+            color: #fcd34d;
+        }
+
+        .badge-type-jeu.radar {
+            background: rgba(244, 114, 182, 0.2);
+            color: #f9a8d4;
+        }
+
+        .grille-options {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            margin-top: 16px;
+        }
+
+        .btn-option {
+            width: 100%;
+            min-height: 54px;
+            text-align: left;
+            background: rgba(255, 228, 230, 0.04);
+            border: 2px solid var(--couleur-bordure);
+            color: var(--couleur-texte);
+            font-family: inherit;
+            font-size: 0.96rem;
+            font-weight: 600;
+            padding: 13px 15px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-option:hover:not(:disabled) {
+            border-color: var(--couleur-principale);
+            background: rgba(251, 113, 133, 0.1);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-option:disabled {
+            cursor: default;
+        }
+
+        .lettre-option {
+            background: var(--couleur-bordure);
+            color: var(--couleur-texte);
+            min-width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.88rem;
+            flex-shrink: 0;
+        }
+
+        .btn-option.correct {
+            background: rgba(52, 211, 153, 0.18);
+            border-color: var(--couleur-succes);
+        }
+        .btn-option.correct .lettre-option {
+            background: var(--couleur-succes);
+            color: #062419;
+        }
+
+        .btn-option.incorrect {
+            background: rgba(251, 113, 133, 0.18);
+            border-color: var(--couleur-erreur);
+        }
+        .btn-option.incorrect .lettre-option {
+            background: var(--couleur-erreur);
+            color: #fff;
+        }
+
+        .citation-paroles {
+            background: rgba(255, 228, 230, 0.06);
+            border-left: 3px solid var(--couleur-principale);
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-style: italic;
+            color: #ffe4e6;
+            font-size: 0.94rem;
+            margin: 10px 0 14px 0;
+        }
+
+        .citation-paroles:empty {
+            display: none;
+        }
+
+        .encart-feedback {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 228, 230, 0.05);
+            border-left: 4px solid var(--couleur-principale);
+        }
+
+        .encart-erreur {
+            background: rgba(251, 191, 36, 0.14);
+            border: 1px solid var(--couleur-alerte);
+            color: #fde68a;
+            padding: 15px;
+            border-radius: 16px;
+            margin-top: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="conteneur">
+        <!-- EN-TÊTE -->
+        <header>
+            <div class="logo">✨ Notre Playlist Quiz</div>
+            <div class="badge-score" id="affichage-score">Score : 0 / 0</div>
+        </header>
+
+        <!-- ÉCRAN 1 : ACCUEIL -->
+        <section id="ecran-accueil" class="carte" style="text-align: center;">
+            <div style="font-size: 2.6rem; margin-bottom: 6px;">🎶💌</div>
+            <h1 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 8px;">
+                Écoute, repère et devine ce qui me fait penser à toi
+            </h1>
+            <p style="color: var(--couleur-texte-doux); font-size: 0.94rem;">
+                Choisis un morceau en mode <strong style="color: #fcd34d;">QCM</strong> (pauses surprises) ou en mode <strong style="color: #f9a8d4;">Radar</strong> (place tes cœurs en direct pendant l'écoute).
+            </p>
+
+            <div id="liste-morceaux-accueil" class="liste-morceaux-accueil"></div>
+
+            <button id="btn-demarrer-tout" class="btn-principal">
+                ✨ Lancer toute la playlist à la suite
+            </button>
+        </section>
+
+        <!-- ÉCRAN 2 : ZONE DE JEU -->
+        <section id="ecran-jeu" class="cache">
+            <div class="carte" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px;">
+                    <span id="numero-manche" style="font-size: 0.8rem; font-weight: 800; color: var(--couleur-principale-claire); text-transform: uppercase;">
+                        Morceau 1 / 4
+                    </span>
+                    <span id="statut-lecture" style="font-size: 0.82rem; color: var(--couleur-texte-doux);">
+                        🎧 Lecture en cours...
+                    </span>
+                </div>
+
+                <div id="info-titre" style="font-size: 1.2rem; font-weight: 800;">Titre</div>
+                <div id="info-artiste" style="color: var(--couleur-texte-doux); font-size: 0.92rem; margin-bottom: 12px;">Artiste</div>
+
+                <!-- SCÈNE MÉDIA HYBRIDE (MP4 OU MP3/DÉMO) -->
+                <div class="scene-media">
+                    <video id="lecteur-video-mp4" class="cache" playsinline preload="metadata"></video>
+                    <audio id="lecteur-audio-mp3" preload="metadata"></audio>
+
+                    <!-- Scène visuelle Pochette + Égaliseur (affichée pour "mp3" et "demo") -->
+                    <div id="scene-visuelle-audio" class="scene-audio">
+                        <div class="halo-arriere-plan"></div>
+                        <div class="contenu-pochette">
+                            <div id="cadre-pochette" class="cadre-pochette"></div>
+                            <div class="infos-audio-scene">
+                                <span id="badge-type-media" class="badge-mode-media">🎵 Audio MP3</span>
+                                <div id="sous-titre-scene" style="font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Écoute le morceau...
+                                </div>
+                                <div class="egaliseur" aria-hidden="true">
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                    <div class="barre-eq"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="overlay-pause" class="overlay-pause cache">
+                        <div style="font-size: 1.2rem; font-weight: 800;">💭 Petite pause question !</div>
+                        <div style="font-size: 0.88rem; color: var(--couleur-texte-doux);">
+                            Réponds ci-dessous pour reprendre l'écoute 👇
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BARRE DE PROGRESSION AVEC REPÈRES / CURSEURS -->
+                <div class="bloc-chronometre">
+                    <div class="ligne-temps">
+                        <span id="texte-chrono">0:00 / 1:05</span>
+                        <span id="texte-repere-pause" style="color: var(--couleur-repere-pause); font-weight: 700;">
+                            Prochaine pause à 0:30
+                        </span>
+                    </div>
+                    <div class="piste-progression">
+                        <div id="remplissage-progression" class="remplissage-progression"></div>
+                        <div id="conteneur-reperes" class="conteneur-reperes"></div>
+                    </div>
+                </div>
+
+                <!-- BOUTONS DE CONTRÔLE TACTILES -->
+                <div class="barre-controles">
+                    <button id="btn-pause-lecture" class="btn-secondaire">
+                        ⏸ Pause
+                    </button>
+                    <button id="btn-reecouter" class="btn-secondaire">
+                        ⏪ Réécouter
+                    </button>
+                    <button id="btn-passer-question" class="btn-secondaire">
+                        💭 Passer à la question
+                    </button>
+                </div>
+
+                <!-- ENCART D'ERREUR SI UN FICHIER .MP3 OU .MP4 EST INTROUVABLE -->
+                <div id="zone-erreur-fichier" class="encart-erreur cache">
+                    <p style="font-weight: 800; margin-bottom: 4px;">⚠️ Fichier audio/vidéo introuvable</p>
+                    <p id="detail-erreur-fichier" style="font-size: 0.85rem; margin-bottom: 12px;">
+                        Vérifie le chemin indiqué dans <code>fichierMedia</code> ou teste avec le mode démo intégré.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button id="btn-basculer-demo" class="btn-principal">
+                            🎛️ Basculer sur le mode démo intégré
+                        </button>
+                        <button id="btn-erreur-voir-question" class="btn-secondaire">
+                            💭 Continuer sans le son
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARTE MODE RADAR (PLACER DES CURSEURS EN DIRECT) -->
+            <div id="carte-radar" class="carte carte-radar cache">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px;">
+                    <span style="font-size: 0.78rem; color: #f9a8d4; font-weight: 800; text-transform: uppercase;">
+                        💗 Mode Radar à Paroles
+                    </span>
+                    <span id="badge-tolerance-radar" style="font-size: 0.76rem; color: var(--couleur-texte-doux);">
+                        Tolérance : ±3s
+                    </span>
+                </div>
+
+                <h2 id="texte-question-radar" style="font-size: 1.12rem; font-weight: 800; line-height: 1.4; margin-bottom: 14px;">
+                    Question radar...
+                </h2>
+
+                <!-- GROS BOUTON BUZZER POUR PLACER UN CURSEUR À L'INSTANT T -->
+                <div id="zone-interaction-radar">
+                    <button id="btn-placer-curseur" class="btn-radar-action">
+                        <span>💗 PLACER UN REPÈRE MAINTENANT</span>
+                        <span id="sous-texte-bouton-radar" style="font-size: 0.78rem; font-weight: 600; opacity: 0.92;">
+                            Appuie dès que tu entends un passage qui te fait penser à nous
+                        </span>
+                    </button>
+
+                    <div id="compteur-curseurs-radar" style="font-size: 0.84rem; color: var(--couleur-texte-doux); margin-top: 12px;">
+                        Aucun repère placé pour l'instant.
+                    </div>
+
+                    <!-- Liste des curseurs posés par le joueur -->
+                    <div id="liste-curseurs-radar" class="liste-tags-curseurs"></div>
+
+                    <div style="margin-top: 16px;">
+                        <button id="btn-valider-radar" class="btn-principal">
+                            ✨ Valider mes repères
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RÉSULTAT & CORRECTION VISUELLE DU MODE RADAR -->
+                <div id="zone-feedback-radar" class="encart-feedback cache" style="border-left-color: var(--couleur-radar);">
+                    <div id="titre-feedback-radar" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 6px;"></div>
+                    <p id="resume-feedback-radar" style="color: var(--couleur-texte-doux); font-size: 0.92rem; margin-bottom: 12px;"></p>
+
+                    <!-- Détail des passages attendus avec bouton d'écoute directe -->
+                    <div id="liste-corrections-radar"></div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+                        <button id="btn-reessayer-radar" class="btn-secondaire">
+                            🔄 Réessayer ce radar
+                        </button>
+                        <button id="btn-suivant-depuis-radar" class="btn-principal">
+                            Morceau suivant ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARTE QUESTION QCM (APPARAÎT AUTOMATIQUEMENT À CHAQUE pauseSecondes) -->
+            <div id="carte-question" class="carte cache">
+                <div id="badge-numero-question" style="font-size: 0.78rem; color: var(--couleur-principale-claire); font-weight: 800; text-transform: uppercase;">
+                    Question sur les paroles
+                </div>
+
+                <div id="texte-citation" class="citation-paroles"></div>
+
+                <h2 id="texte-question" style="font-size: 1.12rem; font-weight: 800; line-height: 1.4;">
+                    Question...
+                </h2>
+
+                <div id="liste-options" class="grille-options"></div>
+
+                <div id="zone-feedback" class="encart-feedback cache">
+                    <div id="titre-feedback" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 6px;"></div>
+                    <p id="texte-explication" style="color: var(--couleur-texte-doux); font-size: 0.94rem; margin-bottom: 16px;"></p>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button id="btn-action-apres-reponse" class="btn-principal">
+                            ▶ Reprendre la musique
+                        </button>
+                        <button id="btn-morceau-suivant" class="btn-secondaire">
+                            Passer au morceau suivant ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ÉCRAN 3 : FIN DE PARTIE -->
+        <section id="ecran-fin" class="carte cache" style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 8px;">💖✨</div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px;">Playlist terminée !</h2>
+            <p id="score-final-texte" style="font-size: 1.2rem; color: var(--couleur-principale-claire); font-weight: 800; margin-bottom: 12px;">
+                Score : 0 / 0
+            </p>
+            <p style="color: var(--couleur-texte-doux); font-size: 0.93rem; margin-bottom: 22px;">
+                Merci d'avoir joué et écouté ces morceaux avec moi.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-rejouer" class="btn-principal">
+                    🔄 Rejouer toute la playlist
+                </button>
+                <button id="btn-retour-accueil" class="btn-secondaire">
+                    🏠 Choisir un morceau
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // =====================================================================
+        // 1. CONFIGURATION DES MORCEAUX ET QUIZ (QCM & MODE RADAR)
+        // =====================================================================
+        // ASTUCE : Pour afficher ou cacher un quiz sans toucher au reste,
+        // change simplement "actif: true" en "actif: false" !
+
+        const CHANSONS = [
+            // --- QUIZ 1 : PLK EN MODE QCM CONTINU (DÉSACTIVÉ EN EXEMPLE) ---
+            {
+                actif: false, // <-- Passe à true si tu veux le réafficher !
+                titre: "Tout recommencer (Quiz QCM)",
+                artiste: "PLK",
+                modeJeu: "qcm",
+                typeMedia: "mp3",
+                fichierMedia: "media/Tout recommencer (feat. Tessa B).mp3",
+                pochetteUrl: "media/mental.jpeg",
+                couleurPochette: "#fb7185",
+                modeContinu: true,
+                debutSecondes: 0,
+                finMorceauSecondes: 0,
+                tirageAleatoire: false,
+                nombreQuestionsAPoser: 3,
+                banqueQuestions: [
+                    {
+                        debutSecondes: 0,
+                        pauseSecondes: 38.5,
+                        citation: "",
+                        question: "Avec laquelle de ces trois phrases est-ce que j'ai le plus pensé à nous durant la phase de doute ?",
+                        options: [
+                            "Que fait-on d'un amour immortel mais censuré par des mensonges réguliers",
+                            "T'es tellement belle quand t'es fâchée",
+                            "J'aimerai tout effacer, construire un nouveau passé",
+                            "Les trois pardi !"
+                        ],
+                        bonneReponseIndex: 2,
+                        explication: "Y'a pas de mensonges (pas que je sache), et t'es tout le temps belle alors..."
+                    },
+                    {
+                        debutSecondes: 38.5,
+                        pauseSecondes: 43,
+                        citation: "",
+                        question: "« C'est dangereux tellement on s'aime »",
+                        options: [
+                            "Vrai",
+                            "Faux"
+                        ],
+                        bonneReponseIndex: 0,
+                        explication: ""
+                    },
+                    {
+                        debutSecondes: 45,
+                        pauseSecondes: 154.8,
+                        citation: "",
+                        question: "« T'es tellement belle je sens la pression des regards sur toi »",
+                        options: [
+                            "Vrai",
+                            "Faux",
+                            "Pour l'instant Faux, probablement Vrai dans le futur",
+                            "Pour l'instant Vrai, probablement Faux dans le futur"
+                        ],
+                        bonneReponseIndex: 2,
+                        explication: "On n'a jamais été qu'à deux et je n'ai jamais eu de soucis à me faire pour l'instant."
+                    }
+                ]
+            },
+
+            // --- QUIZ 2 : PLK EN MODE RADAR (PLACER DES CURSEURS EN ÉCOUTANT) ---
+            {
+                actif: true,
+                titre: "Tout recommencer (Quiz Radar)",
+                artiste: "PLK",
+                modeJeu: "radar",
+                typeMedia: "mp3",
+                fichierMedia: "media/Tout recommencer (feat. Tessa B).mp3",
+                pochetteUrl: "media/mental.jpeg",
+                couleurPochette: "#f472b6",
+                debutSecondes: 0,
+                finMorceauSecondes: 0,
+                questionRadar: "Place un curseur à chaque fois que tu penses que je pense à toi",
+                toleranceSecondes: 3,
+                passagesCibles: [
+                    {
+                        debut: 32,
+                        fin: 38.5,
+                        paroles: "« J'aimerai tout effacer, construire un nouveau passé »"
+                    },
+                    {
+                        debut: 43,
+                        fin: 44,
+                        paroles: "« C'est dangereux tellement on s'aime »"
+                    }, 
+                    {
+                        debut: 89,
+                        fin: 91,
+                        paroles: "« J'aime pas quand tu fais la fête sans moi »"
+                    },
+                    {
+                        debut: 91,
+                        fin: 94,
+                        paroles: "« T'es tellement belle je sens la pression des regards sur toi »"
+                    },
+                    {
+                        debut: 96,
+                        fin: 98,
+                        paroles: "« Quand tu pars si loin je me sens abandonnée comme un syrien »"
+                    }
+                ]
+            },
+
+            // --- QUIZ 3 : GALATÉE - NEKFEU (MODE RADAR - À PERSONNALISER) ---
+            {
+                actif: true,
+                titre: "Galatée (Quiz Radar)",
+                artiste: "Nekfeu",
+                modeJeu: "radar",
+                typeMedia: "mp3",
+                fichierMedia: "media/Nekfeu - Galatée.mp3", // <-- Vérifie le nom exact de ton fichier MP3 !
+                pochetteUrl: "", // <-- Tu peux mettre "media/cyborg.jpg" par exemple
+                couleurPochette: "#fb7185",
+                debutSecondes: 0,
+                finMorceauSecondes: 0,
+                questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
+                toleranceSecondes: 4,
+                passagesCibles: [
+                    {
+                        debut: 30, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 36,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« Passage 1 à compléter avec les paroles de Galatée »"
+                    },
+                    {
+                        debut: 75, // <-- Remplace par le bon timecode de début
+                        fin: 82,   // <-- Remplace par le bon timecode de fin
+                        paroles: "« Passage 2 à compléter avec les paroles de Galatée »"
+                    }
+                ]
+            },
+
+            // --- QUIZ 4 : GALATÉE - NEKFEU (MODE QCM - À PERSONNALISER) ---
+            {
+                actif: true,
+                titre: "Galatée (Quiz QCM)",
+                artiste: "Nekfeu",
+                modeJeu: "qcm",
+                typeMedia: "mp3",
+                fichierMedia: "media/Nekfeu - Galatée.mp3", // <-- Vérifie le nom exact de ton fichier MP3 !
+                pochetteUrl: "",
+                couleurPochette: "#f59e0b",
+                modeContinu: true,
+                debutSecondes: 0,
+                finMorceauSecondes: 0,
+                tirageAleatoire: false,
+                nombreQuestionsAPoser: 2,
+                banqueQuestions: [
+                    {
+                        debutSecondes: 0,
+                        pauseSecondes: 45, // <-- Timecode de la 1ère pause question
+                        citation: "« Citation de Galatée à compléter... »",
+                        question: "Question 1 sur Galatée (à personnaliser) ?",
+                        options: [
+                            "Réponse A",
+                            "Réponse B (bonne réponse par défaut)",
+                            "Réponse C",
+                            "Réponse D"
+                        ],
+                        bonneReponseIndex: 1, // 0 = A, 1 = B, 2 = C, 3 = D
+                        explication: "Ton petit mot d'explication ici 💌"
+                    },
+                    {
+                        debutSecondes: 45,
+                        pauseSecondes: 110, // <-- Timecode de la 2ème pause question
+                        citation: "« Deuxième citation de Galatée à compléter... »",
+                        question: "Question 2 sur Galatée (à personnaliser) ?",
+                        options: [
+                            "Vrai",
+                            "Faux"
+                        ],
+                        bonneReponseIndex: 0,
+                        explication: "Ton petit mot d'explication ici ✨"
+                    }
+                ]
+            },
+
+            // --- QUIZ 5 : NES ---
+            {
+                actif: true,
+                titre: "Des pieds et des mains (Veridis Remix)",
+                artiste: "NeS (Veridis Project)",
+                modeJeu: "qcm",
+                typeMedia: "mp4",
+                fichierMedia: "media/NES - Des pieds et des mains (Veridis Remix).mp4",
+                pochetteUrl: "",
+                couleurPochette: "#fb7185",
+                modeContinu: false,
+                tirageAleatoire: true,
+                nombreQuestionsAPoser: 1,
+                banqueQuestions: [
+                    {
+                        debutSecondes: 0,
+                        pauseSecondes: 120,
+                        repriseFinSecondes: 125,
+                        citation: "« J'ai vu quatre étoiles filantes... »",
+                        question: "Laquelle de ces paroles me fait (le plus) penser à toi ?",
+                        options: [
+                            "« J'ai vu quatre étoiles filantes j'ai fait quatre voeux où t'es dedans »",
+                            "« Toujours pas d'permis j'fais gaffe à l'empreinte carbonne, disquette »",
+                            "« J'ai une gueule de rital, j'parle pas trop italien j'connais que les insultes »",
+                            "« J'mérite la mer des caraïbes ou l'soleil des caraïbes »"
+                        ],
+                        bonneReponseIndex: 0,
+                        explication: "Une punchline romantique emblématique du morceau de NeS."
+                    }
+                ]
+            },
+
+            // --- QUIZ 6 : VALD ---
+            {
+                actif: false, // <-- Masqué par défaut (passe à true pour l'afficher)
+                titre: "C'est pour (Veridis Remix)",
+                artiste: "Vald (Veridis Project)",
+                modeJeu: "qcm",
+                typeMedia: "demo",
+                fichierMedia: "medias/vald-cest-pour.mp3",
+                pochetteUrl: "",
+                couleurPochette: "#f472b6",
+                modeContinu: false,
+                tirageAleatoire: false,
+                nombreQuestionsAPoser: 1,
+                banqueQuestions: [
+                    {
+                        debutSecondes: 0,
+                        pauseSecondes: 12,
+                        repriseFinSecondes: 18,
+                        citation: "« C'est pour les miens, pour ceux qui galèrent en silence et gardent le sourire malgré les coups durs... »",
+                        question: "Quelle est la signification principale des premières paroles de « C'est pour » de Vald ?",
+                        options: [
+                            "Une dédicace solidaire à ses proches et à ceux qui traversent des épreuves avec dignité",
+                            "Un règlement de comptes ironique avec les journalistes et les maisons de disques",
+                            "Le récit absurde d'une soirée ratée dans un club de banlieue parisienne",
+                            "L'annonce officielle de la fin de sa carrière musicale"
+                        ],
+                        bonneReponseIndex: 0,
+                        explication: "Dès les premières mesures, Vald pose un texte sincère et fédérateur : il dédie le morceau à son cercle proche (« les miens ») et à toutes les personnes qui affrontent les difficultés du quotidien sans se plaindre."
+                    }
+                ]
+            }
+        ];
+
+        // =====================================================================
+        // 2. VARIABLES D'ÉTAT DU LECTEUR HYBRIDE, QCM CONTINU & MODE RADAR
+        // =====================================================================
+        let playlistMorceaux = [];
+        let indexMorceauActuel = 0;
+        let indexQuestionDansMorceau = 0;
+        let score = 0;
+        let totalPointsPartie = 0;
+
+        let modeActif = "demo";             // "mp4" | "mp3" | "demo"
+        let phaseLecture = "vers_pause";    // "vers_pause" | "en_pause" | "reprise_suite" | "radar_libre"
+        let estEnLecture = false;
+        let questionDejaRepondue = false;
+        let timerPrincipal = null;
+
+        // État spécifique au mode Radar
+        let curseursRadarJoueur = [];       // Tableau d'objets { id, temps, statut: "attente" | "valide" | "rate" }
+        let radarDejaValide = false;
+
+        // Simulateur Web Audio API (Mode Démo intégré)
+        let contexteAudioDemo = null;
+        let intervalleBeatDemo = null;
+        let tempsDemoActuel = 0;
+        let dernierTimestampDemo = 0;
+        let pasRythmeDemo = 0;
+
+        const videoEl = document.getElementById("lecteur-video-mp4");
+        const audioEl = document.getElementById("lecteur-audio-mp3");
+        const sceneVisuelleAudio = document.getElementById("scene-visuelle-audio");
+
+        // =====================================================================
+        // 3. INITIALISATION & ÉVÉNEMENTS TACTILES
+        // =====================================================================
+        document.addEventListener("DOMContentLoaded", () => {
+            construireListeAccueil();
+
+            document.getElementById("btn-demarrer-tout").addEventListener("click", () => {
+                demarrerPartie(null);
+            });
+
+            // Bouton Pause / Lecture
+            document.getElementById("btn-pause-lecture").addEventListener("click", () => {
+                if (estEnLecture) {
+                    mettreEnPauseMedia();
+                    document.getElementById("statut-lecture").textContent = "⏸️ En pause manuelle";
+                } else {
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = "🎧 Lecture en cours...";
+                }
+            });
+
+            // Bouton Réécouter
+            document.getElementById("btn-reecouter").addEventListener("click", () => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+
+                if (morceau.modeJeu === "radar") {
+                    positionnerMediaASeconde(morceau.debutSecondes);
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = "⏪ Réécoute depuis le début...";
+                    return;
+                }
+
+                const qActuelle = morceau.questions[indexQuestionDansMorceau];
+                const pointDepart = morceau.modeContinu
+                    ? (indexQuestionDansMorceau === 0
+                        ? morceau.debutSecondes
+                        : morceau.questions[indexQuestionDansMorceau - 1].pauseSecondes)
+                    : qActuelle.debutSecondes;
+
+                phaseLecture = "vers_pause";
+                cacherElement("overlay-pause");
+                cacherElement("carte-question");
+                positionnerMediaASeconde(pointDepart);
+                reprendreLectureMedia();
+                document.getElementById("statut-lecture").textContent = "⏪ Réécoute du passage...";
+            });
+
+            // Bouton Passer à la question / Valider le radar
+            document.getElementById("btn-passer-question").addEventListener("click", () => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+                if (morceau.modeJeu === "radar") {
+                    validerReponseRadar();
+                } else {
+                    declencherPauseEtQuestion();
+                }
+            });
+
+            // --- ÉVÉNEMENTS SPÉCIFIQUES AU MODE RADAR ---
+            document.getElementById("btn-placer-curseur").addEventListener("click", () => {
+                placerCurseurRadarMaintenant();
+            });
+
+            document.getElementById("btn-valider-radar").addEventListener("click", () => {
+                validerReponseRadar();
+            });
+
+            document.getElementById("btn-reessayer-radar").addEventListener("click", () => {
+                chargerMorceau(indexMorceauActuel);
+            });
+
+            document.getElementById("btn-suivant-depuis-radar").addEventListener("click", () => {
+                passerAuMorceauSuivant();
+            });
+
+            // --- ÉVÉNEMENTS SECOURS FICHIER MANQUANT ---
+            document.getElementById("btn-basculer-demo").addEventListener("click", () => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+                morceau.typeMedia = "demo";
+                cacherElement("zone-erreur-fichier");
+                chargerMorceau(indexMorceauActuel);
+            });
+
+            document.getElementById("btn-erreur-voir-question").addEventListener("click", () => {
+                cacherElement("zone-erreur-fichier");
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (morceau && morceau.modeJeu === "radar") {
+                    validerReponseRadar();
+                } else {
+                    declencherPauseEtQuestion();
+                }
+            });
+
+            // --- ÉVÉNEMENTS QCM APRÈS RÉPONSE ---
+            document.getElementById("btn-action-apres-reponse").addEventListener("click", () => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+
+                const aUneQuestionSuivanteDansCeMorceau = indexQuestionDansMorceau + 1 < morceau.questions.length;
+
+                if (aUneQuestionSuivanteDansCeMorceau) {
+                    const secondeReprise = morceau.questions[indexQuestionDansMorceau].pauseSecondes;
+                    indexQuestionDansMorceau++;
+                    questionDejaRepondue = false;
+                    phaseLecture = "vers_pause";
+
+                    cacherElement("overlay-pause");
+                    cacherElement("carte-question");
+                    cacherElement("zone-feedback");
+
+                    mettreAJourEnTeteMorceau();
+                    positionnerMediaASeconde(secondeReprise);
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = "🎧 La musique continue...";
+                } else if (morceau.modeContinu && obtenirFinTimelineMorceau(morceau) > obtenirTempsActuelMedia() + 1) {
+                    phaseLecture = "reprise_suite";
+                    cacherElement("overlay-pause");
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = "🔊 Écoute de la fin du morceau...";
+                    document.getElementById("btn-action-apres-reponse").textContent = "➔ Terminer ce morceau";
+                    document.getElementById("btn-action-apres-reponse").onclick = () => passerAuMorceauSuivant();
+                } else if (!morceau.modeContinu && phaseLecture !== "reprise_suite") {
+                    const q = morceau.questions[indexQuestionDansMorceau];
+                    phaseLecture = "reprise_suite";
+                    cacherElement("overlay-pause");
+                    positionnerMediaASeconde(q.pauseSecondes);
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = "🔊 Lecture de la suite...";
+                    document.getElementById("btn-action-apres-reponse").textContent = "➔ Morceau suivant";
+                    document.getElementById("btn-action-apres-reponse").onclick = () => passerAuMorceauSuivant();
+                } else {
+                    passerAuMorceauSuivant();
+                }
+            });
+
+            document.getElementById("btn-morceau-suivant").addEventListener("click", () => {
+                passerAuMorceauSuivant();
+            });
+
+            document.getElementById("btn-rejouer").addEventListener("click", () => {
+                demarrerPartie(null);
+            });
+
+            document.getElementById("btn-retour-accueil").addEventListener("click", () => {
+                arreterToutMedia();
+                afficherEcran("ecran-accueil");
+            });
+
+            // Détection d'erreur ou fin naturelle de lecture sur <video> et <audio>
+            videoEl.addEventListener("error", () => {
+                if (modeActif === "mp4") signalerErreurFichier();
+            });
+            audioEl.addEventListener("error", () => {
+                if (modeActif === "mp3") signalerErreurFichier();
+            });
+            videoEl.addEventListener("ended", () => gererFinNaturelleMedia());
+            audioEl.addEventListener("ended", () => gererFinNaturelleMedia());
+        });
+
+        function construireListeAccueil() {
+            const conteneur = document.getElementById("liste-morceaux-accueil");
+            conteneur.innerHTML = "";
+
+            CHANSONS.forEach((chanson, index) => {
+                // On masque automatiquement les chansons où actif est réglé sur false
+                if (chanson.actif === false) return;
+
+                const estRadar = chanson.modeJeu === "radar";
+                const badgeMode = estRadar
+                    ? `<span class="badge-type-jeu radar">💗 Radar</span>`
+                    : `<span class="badge-type-jeu qcm">💭 QCM</span>`;
+
+                const etiquetteMedia = chanson.typeMedia === "mp4"
+                    ? "🎬 Vidéo"
+                    : (chanson.typeMedia === "mp3" ? "🎵 Audio" : "🎛️ Démo");
+
+                const detailInfo = estRadar
+                    ? `${chanson.passagesCibles.length} passage${chanson.passagesCibles.length > 1 ? "s" : ""} à repérer (±${chanson.toleranceSecondes || 5}s)`
+                    : `${Math.min(chanson.nombreQuestionsAPoser, chanson.banqueQuestions.length)} question(s)`;
+
+                const btn = document.createElement("button");
+                btn.className = "carte-morceau-choix";
+                btn.innerHTML = `
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 800; font-size: 0.98rem;">
+                            ${chanson.titre} ${badgeMode}
+                        </div>
+                        <div style="font-size: 0.83rem; color: var(--couleur-texte-doux); margin-top: 2px;">
+                            ${chanson.artiste} • ${etiquetteMedia} • ${detailInfo}
+                        </div>
+                    </div>
+                    <span style="color: var(--couleur-principale-claire); font-weight: 800; font-size: 0.92rem; flex-shrink: 0;">
+                        Écouter ▶
+                    </span>
+                `;
+                btn.addEventListener("click", () => demarrerPartie(index));
+                conteneur.appendChild(btn);
+            });
+        }
+
+        // =====================================================================
+        // 4. PRÉPARATION DE LA PARTIE
+        // =====================================================================
+        function demarrerPartie(indexChansonUnique) {
+            score = 0;
+            totalPointsPartie = 0;
+            indexMorceauActuel = 0;
+            playlistMorceaux = [];
+
+            const selection = indexChansonUnique !== null
+                ? [CHANSONS[indexChansonUnique]]
+                : CHANSONS.filter((chanson) => chanson.actif !== false);
+
+            selection.forEach((chanson) => {
+                const modeJeu = chanson.modeJeu || "qcm";
+
+                if (modeJeu === "radar") {
+                    const cibles = [...(chanson.passagesCibles || [])].sort((a, b) => a.debut - b.debut);
+                    totalPointsPartie += cibles.length;
+
+                    playlistMorceaux.push({
+                        titre: chanson.titre,
+                        artiste: chanson.artiste,
+                        modeJeu: "radar",
+                        typeMedia: chanson.typeMedia || "demo",
+                        fichierMedia: chanson.fichierMedia || "",
+                        pochetteUrl: chanson.pochetteUrl || "",
+                        couleurPochette: chanson.couleurPochette || "#f472b6",
+                        debutSecondes: chanson.debutSecondes ?? 0,
+                        finMorceauSecondes: chanson.finMorceauSecondes || 0,
+                        questionRadar: chanson.questionRadar || "Place un repère au moment recherché !",
+                        toleranceSecondes: chanson.toleranceSecondes ?? 5,
+                        passagesCibles: cibles
+                    });
+                } else {
+                    let pool = [...chanson.banqueQuestions];
+                    if (chanson.tirageAleatoire) {
+                        pool.sort(() => Math.random() - 0.5);
+                    }
+                    const retenues = pool
+                        .slice(0, chanson.nombreQuestionsAPoser)
+                        .sort((a, b) => a.pauseSecondes - b.pauseSecondes);
+
+                    totalPointsPartie += retenues.length;
+
+                    playlistMorceaux.push({
+                        titre: chanson.titre,
+                        artiste: chanson.artiste,
+                        modeJeu: "qcm",
+                        typeMedia: chanson.typeMedia || "demo",
+                        fichierMedia: chanson.fichierMedia || "",
+                        pochetteUrl: chanson.pochetteUrl || "",
+                        couleurPochette: chanson.couleurPochette || "#fb7185",
+                        modeContinu: Boolean(chanson.modeContinu),
+                        debutSecondes: chanson.debutSecondes ?? retenues[0].debutSecondes ?? 0,
+                        finMorceauSecondes: chanson.finMorceauSecondes || 0,
+                        questions: retenues
+                    });
+                }
+            });
+
+            mettreAJourBadgeScore();
+            afficherEcran("ecran-jeu");
+            chargerMorceau(0);
+        }
+
+        function passerAuMorceauSuivant() {
+            if (indexMorceauActuel + 1 < playlistMorceaux.length) {
+                chargerMorceau(indexMorceauActuel + 1);
+            } else {
+                afficherFinDePartie();
+            }
+        }
+
+        // =====================================================================
+        // 5. CHARGEMENT D'UN MORCEAU (QCM OU RADAR)
+        // =====================================================================
+        function chargerMorceau(index) {
+            arreterToutMedia();
+            indexMorceauActuel = index;
+            indexQuestionDansMorceau = 0;
+            questionDejaRepondue = false;
+            curseursRadarJoueur = [];
+            radarDejaValide = false;
+
+            const morceau = playlistMorceaux[index];
+            if (!morceau) {
+                afficherFinDePartie();
+                return;
+            }
+
+            modeActif = morceau.typeMedia;
+            const estRadar = morceau.modeJeu === "radar";
+            phaseLecture = estRadar ? "radar_libre" : "vers_pause";
+
+            document.getElementById("info-titre").textContent = morceau.titre;
+            document.getElementById("info-artiste").textContent = morceau.artiste;
+            document.getElementById("statut-lecture").textContent = estRadar
+                ? "💗 Place tes repères pendant l'écoute !"
+                : "🎧 Écoute attentivement les paroles...";
+
+            cacherElement("overlay-pause");
+            cacherElement("zone-erreur-fichier");
+            cacherElement("carte-question");
+            cacherElement("zone-feedback");
+            cacherElement("carte-radar");
+
+            const debut = morceau.debutSecondes;
+            const fin = obtenirFinTimelineMorceau(morceau);
+            document.getElementById("remplissage-progression").style.width = "0%";
+            document.getElementById("texte-chrono").textContent = `${formaterSecondes(debut)} / ${formaterSecondes(fin)}`;
+
+            // Configuration spécifique Radar vs QCM
+            if (estRadar) {
+                document.getElementById("numero-manche").textContent =
+                    `Morceau ${index + 1} / ${playlistMorceaux.length} • Mode Radar 💗`;
+                document.getElementById("texte-repere-pause").textContent =
+                    `Tolérance ±${morceau.toleranceSecondes}s`;
+                document.getElementById("texte-repere-pause").style.color = "#f9a8d4";
+                document.getElementById("btn-passer-question").textContent = "✨ Valider mes repères";
+
+                document.getElementById("badge-tolerance-radar").textContent =
+                    `Tolérance : ±${morceau.toleranceSecondes}s`;
+                document.getElementById("texte-question-radar").textContent = morceau.questionRadar;
+                document.getElementById("compteur-curseurs-radar").textContent =
+                    "Aucun repère placé pour l'instant.";
+                document.getElementById("liste-curseurs-radar").innerHTML = "";
+                document.getElementById("conteneur-reperes").innerHTML = "";
+
+                afficherElement("zone-interaction-radar");
+                cacherElement("zone-feedback-radar");
+                afficherElement("carte-radar");
+            } else {
+                document.getElementById("texte-repere-pause").style.color = "var(--couleur-repere-pause)";
+                document.getElementById("btn-passer-question").textContent = "💭 Passer à la question";
+                mettreAJourEnTeteMorceau();
+                dessinerReperesPauseSurBarre(morceau);
+            }
+
+            if (modeActif === "mp4") {
+                cacherElement("scene-visuelle-audio");
+                afficherElement("lecteur-video-mp4");
+                videoEl.src = morceau.fichierMedia;
+                videoEl.currentTime = debut;
+                reprendreLectureMedia();
+            } else if (modeActif === "mp3") {
+                cacherElement("lecteur-video-mp4");
+                afficherElement("scene-visuelle-audio");
+                document.getElementById("badge-type-media").textContent = "🎵 Audio MP3";
+                document.getElementById("sous-titre-scene").textContent = `${morceau.artiste} — ${morceau.titre}`;
+                genererVisuelPochette(morceau);
+                audioEl.src = morceau.fichierMedia;
+                audioEl.currentTime = debut;
+                reprendreLectureMedia();
+            } else {
+                cacherElement("lecteur-video-mp4");
+                afficherElement("scene-visuelle-audio");
+                document.getElementById("badge-type-media").textContent = "🎛️ Mode Démo Synthétique";
+                document.getElementById("sous-titre-scene").textContent = "Simulation d'extrait musical en cours...";
+                genererVisuelPochette(morceau);
+                tempsDemoActuel = debut;
+                reprendreLectureMedia();
+            }
+
+            demarrerSurveillanceChrono();
+        }
+
+        function obtenirFinTimelineMorceau(morceau) {
+            if (morceau.modeJeu === "radar") {
+                if (morceau.finMorceauSecondes > 0) return morceau.finMorceauSecondes;
+                if (modeActif === "mp3" && audioEl.duration && !isNaN(audioEl.duration)) return audioEl.duration;
+                if (modeActif === "mp4" && videoEl.duration && !isNaN(videoEl.duration)) return videoEl.duration;
+                const dernierPassage = morceau.passagesCibles[morceau.passagesCibles.length - 1];
+                return dernierPassage ? dernierPassage.fin + 15 : 180;
+            }
+
+            if (morceau.modeContinu) {
+                if (morceau.finMorceauSecondes > 0) return morceau.finMorceauSecondes;
+                if (modeActif === "mp3" && audioEl.duration && !isNaN(audioEl.duration)) return audioEl.duration;
+                if (modeActif === "mp4" && videoEl.duration && !isNaN(videoEl.duration)) return videoEl.duration;
+                return morceau.questions[morceau.questions.length - 1].pauseSecondes + 8;
+            }
+
+            const q = morceau.questions[indexQuestionDansMorceau];
+            return q.repriseFinSecondes || (q.pauseSecondes + 6);
+        }
+
+        function mettreAJourEnTeteMorceau() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau || morceau.modeJeu === "radar") return;
+            const q = morceau.questions[indexQuestionDansMorceau];
+
+            document.getElementById("numero-manche").textContent =
+                `Morceau ${indexMorceauActuel + 1} / ${playlistMorceaux.length} • Question ${indexQuestionDansMorceau + 1} / ${morceau.questions.length}`;
+            document.getElementById("texte-repere-pause").textContent =
+                `Pause à ${formaterSecondes(q.pauseSecondes)}`;
+
+            dessinerReperesPauseSurBarre(morceau);
+        }
+
+        function dessinerReperesPauseSurBarre(morceau) {
+            const conteneur = document.getElementById("conteneur-reperes");
+            conteneur.innerHTML = "";
+
+            const debut = morceau.debutSecondes;
+            const fin = obtenirFinTimelineMorceau(morceau);
+            const dureeTotale = Math.max(1, fin - debut);
+
+            morceau.questions.forEach((q, idx) => {
+                const pourcent = Math.min(99, Math.max(2, ((q.pauseSecondes - debut) / dureeTotale) * 100));
+                const repere = document.createElement("div");
+                repere.className = "repere-pause" + (idx < indexQuestionDansMorceau ? " passe" : "");
+                repere.style.left = pourcent + "%";
+                repere.title = `Question ${idx + 1} à ${formaterSecondes(q.pauseSecondes)}`;
+                conteneur.appendChild(repere);
+            });
+        }
+
+        // =====================================================================
+        // 6. LOGIQUE DU MODE RADAR (PLACER DES CURSEURS & ÉVALUER ±X SECONDES)
+        // =====================================================================
+        function placerCurseurRadarMaintenant() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau || morceau.modeJeu !== "radar" || radarDejaValide) return;
+
+            const tempsActuel = Number(obtenirTempsActuelMedia().toFixed(1));
+            const nouveauCurseur = {
+                id: Date.now() + Math.random(),
+                temps: tempsActuel,
+                statut: "attente"
+            };
+
+            curseursRadarJoueur.push(nouveauCurseur);
+            curseursRadarJoueur.sort((a, b) => a.temps - b.temps);
+
+            rafraichirAffichageCurseursRadar();
+        }
+
+        function supprimerCurseurRadar(idCurseur) {
+            if (radarDejaValide) return;
+            curseursRadarJoueur = curseursRadarJoueur.filter((c) => c.id !== idCurseur);
+            rafraichirAffichageCurseursRadar();
+        }
+
+        function rafraichirAffichageCurseursRadar() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau) return;
+
+            const debut = morceau.debutSecondes;
+            const fin = obtenirFinTimelineMorceau(morceau);
+            const dureeTotale = Math.max(1, fin - debut);
+
+            // 1. Dessiner les curseurs sur la barre de progression
+            const conteneurReperes = document.getElementById("conteneur-reperes");
+            conteneurReperes.querySelectorAll(".curseur-joueur").forEach((el) => el.remove());
+
+            curseursRadarJoueur.forEach((c) => {
+                const pourcent = Math.min(99, Math.max(1, ((c.temps - debut) / dureeTotale) * 100));
+                const marqueur = document.createElement("div");
+                marqueur.className = "curseur-joueur" + (c.statut !== "attente" ? " " + c.statut : "");
+                marqueur.style.left = pourcent + "%";
+                marqueur.title = `Repère à ${formaterSecondesPrecis(c.temps)}`;
+                conteneurReperes.appendChild(marqueur);
+            });
+
+            // 2. Afficher les badges tactiles supprimables sous le buzzer
+            const listeTags = document.getElementById("liste-curseurs-radar");
+            listeTags.innerHTML = "";
+
+            curseursRadarJoueur.forEach((c, idx) => {
+                const tag = document.createElement("span");
+                tag.className = "tag-curseur" + (c.statut !== "attente" ? " " + c.statut : "");
+                const icone = c.statut === "valide" ? "✅" : (c.statut === "rate" ? "❌" : "💗");
+                tag.innerHTML = `
+                    <span>${icone} #${idx + 1} (${formaterSecondesPrecis(c.temps)})</span>
+                    ${!radarDejaValide ? `<button class="btn-suppr-curseur" title="Supprimer ce repère">✕</button>` : ""}
+                `;
+                if (!radarDejaValide) {
+                    tag.querySelector(".btn-suppr-curseur").addEventListener("click", () => supprimerCurseurRadar(c.id));
+                }
+                listeTags.appendChild(tag);
+            });
+
+            const compteur = document.getElementById("compteur-curseurs-radar");
+            if (curseursRadarJoueur.length === 0) {
+                compteur.textContent = "Aucun repère placé pour l'instant.";
+            } else {
+                compteur.textContent = `${curseursRadarJoueur.length} repère${curseursRadarJoueur.length > 1 ? "s" : ""} placé${curseursRadarJoueur.length > 1 ? "s" : ""} (appuie sur ✕ pour en retirer un).`;
+            }
+        }
+
+        function validerReponseRadar() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau || morceau.modeJeu !== "radar" || radarDejaValide) return;
+
+            radarDejaValide = true;
+            mettreEnPauseMedia();
+            document.getElementById("statut-lecture").textContent = "📊 Correction du radar";
+
+            const tolerance = morceau.toleranceSecondes ?? 5;
+            const cibles = morceau.passagesCibles;
+
+            // Étape 1 : Vérifier chaque curseur du joueur
+            curseursRadarJoueur.forEach((curseur) => {
+                const estDansUneZone = cibles.some((cible) =>
+                    curseur.temps >= (cible.debut - tolerance) &&
+                    curseur.temps <= (cible.fin + tolerance)
+                );
+                curseur.statut = estDansUneZone ? "valide" : "rate";
+            });
+
+            // Étape 2 : Vérifier combien de passages cibles ont été trouvés
+            let passagesTrouves = 0;
+            const detailsCibles = cibles.map((cible) => {
+                const curseurCorrespondant = curseursRadarJoueur.find((c) =>
+                    c.temps >= (cible.debut - tolerance) &&
+                    c.temps <= (cible.fin + tolerance)
+                );
+                if (curseurCorrespondant) passagesTrouves++;
+                return {
+                    cible,
+                    trouve: Boolean(curseurCorrespondant),
+                    curseur: curseurCorrespondant
+                };
+            });
+
+            const curseursRates = curseursRadarJoueur.filter((c) => c.statut === "rate").length;
+            const pointsGagnes = Math.max(0, Math.round((passagesTrouves - curseursRates * 0.5) * 10) / 10);
+            score = Math.round((score + pointsGagnes) * 10) / 10;
+            mettreAJourBadgeScore();
+
+            // Étape 3 : Dessiner les zones vertes cibles sur la barre de progression
+            const debut = morceau.debutSecondes;
+            const fin = obtenirFinTimelineMorceau(morceau);
+            const dureeTotale = Math.max(1, fin - debut);
+            const conteneurReperes = document.getElementById("conteneur-reperes");
+
+            cibles.forEach((cible) => {
+                const debutZone = Math.max(debut, cible.debut - tolerance);
+                const finZone = Math.min(fin, cible.fin + tolerance);
+                const gauchePourcent = ((debutZone - debut) / dureeTotale) * 100;
+                const largeurPourcent = Math.max(2, ((finZone - debutZone) / dureeTotale) * 100);
+
+                const zoneEl = document.createElement("div");
+                zoneEl.className = "zone-cible-radar";
+                zoneEl.style.left = gauchePourcent + "%";
+                zoneEl.style.width = largeurPourcent + "%";
+                zoneEl.title = `Zone valide : ${formaterSecondes(cible.debut)} - ${formaterSecondes(cible.fin)}`;
+                conteneurReperes.appendChild(zoneEl);
+            });
+
+            rafraichirAffichageCurseursRadar();
+
+            // Étape 4 : Afficher le bilan détaillé
+            cacherElement("zone-interaction-radar");
+            const titre = document.getElementById("titre-feedback-radar");
+            if (passagesTrouves === cibles.length && curseursRates === 0) {
+                titre.textContent = `💖 Sans-faute ! (+${pointsGagnes} pt${pointsGagnes > 1 ? "s" : ""})`;
+                titre.style.color = "var(--couleur-succes)";
+            } else if (passagesTrouves > 0) {
+                titre.textContent = `✨ ${passagesTrouves} / ${cibles.length} passage(s) repéré(s) (+${pointsGagnes} pt${pointsGagnes > 1 ? "s" : ""})`;
+                titre.style.color = "#f9a8d4";
+            } else {
+                titre.textContent = `💭 Aucun passage repéré (0 / ${cibles.length} pt)`;
+                titre.style.color = "var(--couleur-erreur)";
+            }
+
+            document.getElementById("resume-feedback-radar").textContent =
+                curseursRates > 0
+                    ? `Tu as placé ${curseursRates} repère(s) en dehors des zones valides (pénalité -0.5 pt par erreur).`
+                    : `Tous tes repères étaient bien placés dans la fenêtre de tolérance (±${tolerance}s) !`;
+
+            const listeCorrections = document.getElementById("liste-corrections-radar");
+            listeCorrections.innerHTML = "";
+
+            detailsCibles.forEach((item, idx) => {
+                const div = document.createElement("div");
+                div.className = "item-correction-radar";
+                div.innerHTML = `
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-weight: 800; font-size: 0.86rem; color: ${item.trouve ? "var(--couleur-succes)" : "var(--couleur-erreur)"};">
+                            ${item.trouve ? "✅ Repéré" : "❌ Manqué"} • Passage #${idx + 1} (${formaterSecondes(item.cible.debut)} → ${formaterSecondes(item.cible.fin)})
+                        </div>
+                        <div style="font-size: 0.84rem; color: #ffe4e6; font-style: italic; margin-top: 2px;">
+                            ${item.cible.paroles}
+                        </div>
+                    </div>
+                    <button class="btn-secondaire" style="width: auto; min-height: 38px; padding: 6px 12px; font-size: 0.8rem; flex-shrink: 0;">
+                        🔊 Écouter
+                    </button>
+                `;
+                div.querySelector("button").addEventListener("click", () => {
+                    positionnerMediaASeconde(Math.max(0, item.cible.debut - 2));
+                    reprendreLectureMedia();
+                    document.getElementById("statut-lecture").textContent = `🔊 Écoute du passage #${idx + 1}...`;
+                });
+                listeCorrections.appendChild(div);
+            });
+
+            document.getElementById("btn-suivant-depuis-radar").textContent =
+                indexMorceauActuel + 1 < playlistMorceaux.length ? "Morceau suivant ➔" : "Voir le score final 💖";
+
+            afficherElement("zone-feedback-radar");
+        }
+
+        // =====================================================================
+        // 7. VISUEL POCHETTE & CONTRÔLE UNIFIÉ DU MÉDIA
+        // =====================================================================
+        function genererVisuelPochette(morceau) {
+            const cadre = document.getElementById("cadre-pochette");
+            if (morceau.pochetteUrl) {
+                cadre.innerHTML = `<img src="${morceau.pochetteUrl}" alt="Pochette de ${morceau.titre}" onerror="this.parentElement.innerHTML='<span style=font-size:2rem>💿</span>'">`;
+                return;
+            }
+
+            const initiales = morceau.artiste
+                .split(" ")
+                .slice(0, 2)
+                .map((mot) => mot[0] || "")
+                .join("")
+                .toUpperCase();
+
+            cadre.innerHTML = `
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gradPochette" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${morceau.couleurPochette}" />
+                            <stop offset="100%" stop-color="#24181e" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="120" height="120" fill="url(#gradPochette)" />
+                    <circle cx="60" cy="60" r="38" fill="none" stroke="rgba(255,228,230,0.28)" stroke-width="2" />
+                    <circle cx="60" cy="60" r="10" fill="rgba(255,228,230,0.25)" />
+                    <text x="60" y="66" text-anchor="middle" fill="#fff1f2" font-family="sans-serif" font-weight="800" font-size="22">
+                        ${initiales}
+                    </text>
+                </svg>
+            `;
+        }
+
+        function reprendreLectureMedia() {
+            estEnLecture = true;
+            document.getElementById("btn-pause-lecture").textContent = "⏸ Pause";
+            sceneVisuelleAudio.classList.add("en-lecture");
+
+            if (modeActif === "mp4") {
+                videoEl.play().catch(() => {
+                    estEnLecture = false;
+                    document.getElementById("btn-pause-lecture").textContent = "▶ Lecture";
+                });
+            } else if (modeActif === "mp3") {
+                audioEl.play().catch(() => {
+                    estEnLecture = false;
+                    document.getElementById("btn-pause-lecture").textContent = "▶ Lecture";
+                });
+            } else {
+                demarrerAudioSynthetiqueDemo();
+            }
+        }
+
+        function mettreEnPauseMedia() {
+            estEnLecture = false;
+            document.getElementById("btn-pause-lecture").textContent = "▶ Lecture";
+            sceneVisuelleAudio.classList.remove("en-lecture");
+
+            if (modeActif === "mp4") {
+                videoEl.pause();
+            } else if (modeActif === "mp3") {
+                audioEl.pause();
+            } else {
+                arreterAudioSynthetiqueDemo();
+            }
+        }
+
+        function positionnerMediaASeconde(seconde) {
+            if (modeActif === "mp4") {
+                videoEl.currentTime = seconde;
+            } else if (modeActif === "mp3") {
+                audioEl.currentTime = seconde;
+            } else {
+                tempsDemoActuel = seconde;
+                dernierTimestampDemo = performance.now();
+            }
+        }
+
+        function obtenirTempsActuelMedia() {
+            if (modeActif === "mp4") return videoEl.currentTime || 0;
+            if (modeActif === "mp3") return audioEl.currentTime || 0;
+
+            if (estEnLecture) {
+                const maintenant = performance.now();
+                tempsDemoActuel += (maintenant - dernierTimestampDemo) / 1000;
+                dernierTimestampDemo = maintenant;
+            }
+            return tempsDemoActuel;
+        }
+
+        function arreterToutMedia() {
+            estEnLecture = false;
+            clearInterval(timerPrincipal);
+            timerPrincipal = null;
+            videoEl.pause();
+            audioEl.pause();
+            arreterAudioSynthetiqueDemo();
+            sceneVisuelleAudio.classList.remove("en-lecture");
+        }
+
+        function gererFinNaturelleMedia() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau) return;
+            if (morceau.modeJeu === "radar" && !radarDejaValide) {
+                validerReponseRadar();
+            }
+        }
+
+        function signalerErreurFichier() {
+            arreterToutMedia();
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            document.getElementById("statut-lecture").textContent = "⚠️ Fichier non chargé";
+            document.getElementById("detail-erreur-fichier").innerHTML =
+                `Impossible de lire <code>${morceau ? morceau.fichierMedia : ""}</code>. Vérifie le nom du fichier sur GitHub ou teste avec le mode démo intégré !`;
+            afficherElement("zone-erreur-fichier");
+        }
+
+        function demarrerAudioSynthetiqueDemo() {
+            dernierTimestampDemo = performance.now();
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!contexteAudioDemo && AudioCtx) {
+                    contexteAudioDemo = new AudioCtx();
+                }
+                if (contexteAudioDemo && contexteAudioDemo.state === "suspended") {
+                    contexteAudioDemo.resume();
+                }
+            } catch (e) {}
+
+            clearInterval(intervalleBeatDemo);
+            pasRythmeDemo = 0;
+
+            const jouerNoteBeat = () => {
+                if (!estEnLecture || !contexteAudioDemo) return;
+                const t = contexteAudioDemo.currentTime;
+                const osc = contexteAudioDemo.createOscillator();
+                const gain = contexteAudioDemo.createGain();
+
+                const notes = [110, 164.81, 130.81, 196.00];
+                osc.type = pasRythmeDemo % 2 === 0 ? "triangle" : "sine";
+                osc.frequency.setValueAtTime(notes[pasRythmeDemo % notes.length], t);
+
+                gain.gain.setValueAtTime(0.06, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+                osc.connect(gain);
+                gain.connect(contexteAudioDemo.destination);
+                osc.start(t);
+                osc.stop(t + 0.3);
+                pasRythmeDemo++;
+            };
+
+            jouerNoteBeat();
+            intervalleBeatDemo = setInterval(jouerNoteBeat, 460);
+        }
+
+        function arreterAudioSynthetiqueDemo() {
+            clearInterval(intervalleBeatDemo);
+            intervalleBeatDemo = null;
+        }
+
+        // =====================================================================
+        // 8. SURVEILLANCE DU CHRONOMÈTRE
+        // =====================================================================
+        function demarrerSurveillanceChrono() {
+            clearInterval(timerPrincipal);
+
+            timerPrincipal = setInterval(() => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+
+                const temps = obtenirTempsActuelMedia();
+                const debut = morceau.debutSecondes;
+                const fin = obtenirFinTimelineMorceau(morceau);
+                const dureeTotale = Math.max(1, fin - debut);
+
+                const pourcent = Math.min(100, Math.max(0, ((temps - debut) / dureeTotale) * 100));
+                document.getElementById("remplissage-progression").style.width = pourcent + "%";
+                document.getElementById("texte-chrono").textContent = `${formaterSecondes(temps)} / ${formaterSecondes(fin)}`;
+
+                if (morceau.modeJeu === "radar") {
+                    if (morceau.finMorceauSecondes > 0 && temps >= morceau.finMorceauSecondes && !radarDejaValide) {
+                        validerReponseRadar();
+                    }
+                    return;
+                }
+
+                const qActuelle = morceau.questions[indexQuestionDansMorceau];
+                if (phaseLecture === "vers_pause" && qActuelle && temps >= qActuelle.pauseSecondes) {
+                    declencherPauseEtQuestion();
+                }
+
+                if (phaseLecture === "reprise_suite" && temps >= fin) {
+                    mettreEnPauseMedia();
+                    phaseLecture = "en_pause";
+                    document.getElementById("statut-lecture").textContent = "✅ Fin de l'écoute";
+                }
+            }, 100);
+        }
+
+        function declencherPauseEtQuestion() {
+            phaseLecture = "en_pause";
+            mettreEnPauseMedia();
+
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            const qActuelle = morceau ? morceau.questions[indexQuestionDansMorceau] : null;
+            if (qActuelle) {
+                positionnerMediaASeconde(qActuelle.pauseSecondes);
+            }
+
+            document.getElementById("statut-lecture").textContent = `💭 Pause question ${indexQuestionDansMorceau + 1}`;
+            afficherElement("overlay-pause");
+            afficherCarteQuestion();
+        }
+
+        // =====================================================================
+        // 9. AFFICHAGE QCM & VÉRIFICATION DES RÉPONSES
+        // =====================================================================
+        function afficherCarteQuestion() {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            const q = morceau.questions[indexQuestionDansMorceau];
+
+            document.getElementById("badge-numero-question").textContent =
+                `Question ${indexQuestionDansMorceau + 1} sur ${morceau.questions.length} — ${morceau.titre}`;
+            document.getElementById("texte-citation").textContent = q.citation || "";
+            document.getElementById("texte-question").textContent = q.question;
+
+            const conteneur = document.getElementById("liste-options");
+            conteneur.innerHTML = "";
+            const lettres = ["A", "B", "C", "D"];
+
+            q.options.forEach((texteOption, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "btn-option";
+                btn.innerHTML = `
+                    <span class="lettre-option">${lettres[idx]}</span>
+                    <span>${texteOption}</span>
+                `;
+                btn.addEventListener("click", () => verifierReponse(idx));
+                conteneur.appendChild(btn);
+            });
+
+            cacherElement("zone-feedback");
+            afficherElement("carte-question");
+            document.getElementById("carte-question").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function verifierReponse(indexChoisi) {
+            if (questionDejaRepondue) return;
+            questionDejaRepondue = true;
+
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            const q = morceau.questions[indexQuestionDansMorceau];
+            const bonneIndex = q.bonneReponseIndex;
+            const boutons = document.querySelectorAll("#liste-options .btn-option");
+
+            boutons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === bonneIndex) {
+                    btn.classList.add("correct");
+                } else if (idx === indexChoisi) {
+                    btn.classList.add("incorrect");
+                }
+            });
+
+            const estCorrect = indexChoisi === bonneIndex;
+            if (estCorrect) score++;
+            mettreAJourBadgeScore();
+
+            const titreFeedback = document.getElementById("titre-feedback");
+            if (estCorrect) {
+                titreFeedback.textContent = "💖 Bonne réponse !";
+                titreFeedback.style.color = "var(--couleur-succes)";
+            } else {
+                titreFeedback.textContent = "💭 Pas tout à fait !";
+                titreFeedback.style.color = "var(--couleur-erreur)";
+            }
+
+            document.getElementById("texte-explication").textContent = q.explication;
+
+            const btnAction = document.getElementById("btn-action-apres-reponse");
+            const btnSuivant = document.getElementById("btn-morceau-suivant");
+            const resteQuestionsSurCeMorceau = indexQuestionDansMorceau + 1 < morceau.questions.length;
+
+            if (resteQuestionsSurCeMorceau) {
+                const prochainePause = formaterSecondes(morceau.questions[indexQuestionDansMorceau + 1].pauseSecondes);
+                btnAction.textContent = `▶ Reprendre la musique (Question ${indexQuestionDansMorceau + 2}/${morceau.questions.length} à ${prochainePause})`;
+                btnSuivant.textContent = "Passer directement au morceau suivant ➔";
+            } else {
+                btnAction.textContent = "🔊 Écouter la suite du morceau";
+                btnSuivant.textContent = indexMorceauActuel + 1 < playlistMorceaux.length
+                    ? "Morceau suivant ➔"
+                    : "Voir le score final 💖";
+            }
+
+            afficherElement("zone-feedback");
+            document.getElementById("zone-feedback").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function afficherFinDePartie() {
+            arreterToutMedia();
+            document.getElementById("score-final-texte").textContent = `Score final : ${score} / ${totalPointsPartie}`;
+            afficherEcran("ecran-fin");
+        }
+
+        // =====================================================================
+        // 10. UTILITAIRES D'INTERFACE
+        // =====================================================================
+        function formaterSecondes(sec) {
+            const total = Math.max(0, Math.floor(sec));
+            const minutes = Math.floor(total / 60);
+            const secondes = total % 60;
+            return `${minutes}:${secondes < 10 ? "0" : ""}${secondes}`;
+        }
+
+        function formaterSecondesPrecis(sec) {
+            const total = Math.max(0, sec);
+            const minutes = Math.floor(total / 60);
+            const secondes = (total % 60).toFixed(1);
+            return `${minutes}:${Number(secondes) < 10 ? "0" : ""}${secondes}`;
+        }
+
+        function mettreAJourBadgeScore() {
+            document.getElementById("affichage-score").textContent = `Score : ${score} / ${totalPointsPartie}`;
+        }
+
+        function afficherEcran(id) {
+            ["ecran-accueil", "ecran-jeu", "ecran-fin"].forEach((ecran) => {
+                document.getElementById(ecran).classList.add("cache");
+            });
+            document.getElementById(id).classList.remove("cache");
+        }
+
+        function afficherElement(id) {
+            document.getElementById(id).classList.remove("cache");
+        }
+
+        function cacherElement(id) {
+            document.getElementById(id).classList.add("cache");
+        }
+    </script>
+</body>
+</html>
