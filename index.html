@@ -1062,7 +1062,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 0,
                 questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
-                toleranceSecondes: 7,
+                toleranceSecondes: 3,
                 passagesCibles: [
                     {
                         debut: 19, // <-- Remplace par le bon timecode de début (en secondes)
@@ -1113,12 +1113,65 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 123.5,
                 questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
-                toleranceSecondes: 1,
+                toleranceSecondes: 3,
                 passagesCibles: [
                     {
                         debut: 91, // <-- Remplace par le bon timecode de début (en secondes)
                         fin: 94,   // <-- Remplace par le bon timecode de fin (en secondes)
                         paroles: "« Moi je voulais voir les sseuf à Clara »"
+                    }
+                ]
+            },
+             // --- QUIZ 3 ter : Copine - PLK (MODE RADAR - À PERSONNALISER) ---
+            {
+                actif: true,
+                titre: "Copine (Quiz Radar)",
+                artiste: "PLK",
+                modeJeu: "radar",
+                typeMedia: "mp3",
+                fichierMedia: "media/Copine.mp3", // <-- Vérifie le nom exact de ton fichier MP3 !
+                 pochetteUrl: "media/Platinium.png",
+                couleurPochette: "#fb7185",
+                debutSecondes: 0,
+                finMorceauSecondes: 115.5,
+                questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
+                toleranceSecondes: 3,
+                passagesCibles: [
+                    {
+                        debut: 30, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 32,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« Oublie pas qu'elles nous prennent pour des lossa »"
+                    }, 
+                    {
+                        debut: 34, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 36,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "«Qu'elle a déjà menti mais par amour »"
+                    }, 
+                    {
+                        debut: 39, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 42,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« Que son ex l'a trompé (apparemment) »"
+                    },
+                     {
+                        debut: 52, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 53,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« La copine est bonne mais la copine met des barrières »"
+                    },
+                    
+                    {
+                        debut: 56, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 57,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« La copine est blessée pour elle tous les gars sont pareils »"
+                    },
+                    {
+                        debut: 99, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 105,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« Pour elle faire la fête c'est primordial, before after c'est primordial, avec ses copines c'est primordial »"
+                    },
+                    {
+                        debut: 108, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 109,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« La copine veut même plus entendre parler des garçons »"
                     }
                 ]
             },
@@ -1169,7 +1222,7 @@
 
             // --- QUIZ 5 : NES ---
             {
-                actif: true,
+                actif: false,
                 titre: "Des pieds et des mains (Veridis Remix)",
                 artiste: "NeS (Veridis Project)",
                 modeJeu: "qcm",
