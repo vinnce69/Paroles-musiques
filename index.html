@@ -1062,7 +1062,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 0,
                 questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
-                toleranceSecondes: 4,
+                toleranceSecondes: 7,
                 passagesCibles: [
                     {
                         debut: 19, // <-- Remplace par le bon timecode de début (en secondes)
@@ -1101,7 +1101,27 @@
                     }
                 ]
             },
-
+            // --- QUIZ 3 bis : Luv resval MPC - NEKFEU (MODE RADAR - À PERSONNALISER) ---
+            {
+                actif: true,
+                titre: "MPC Live (Quiz Radar)",
+                artiste: "Luv Resval",
+                modeJeu: "radar",
+                typeMedia: "mp4",
+                fichierMedia: "media/Luv Resval - MPC (Live).mp4", // <-- Vérifie le nom exact de ton fichier MP3 !
+                couleurPochette: "#fb7185",
+                debutSecondes: 0,
+                finMorceauSecondes: 123.5,
+                questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
+                toleranceSecondes: 1,
+                passagesCibles: [
+                    {
+                        debut: 91, // <-- Remplace par le bon timecode de début (en secondes)
+                        fin: 94,   // <-- Remplace par le bon timecode de fin (en secondes)
+                        paroles: "« Moi je voulais voir les sseuf à Clara »"
+                    }
+                ]
+            },
             // --- QUIZ 4 : GALATÉE - NEKFEU (MODE QCM - À PERSONNALISER) ---
             {
                 actif: true,
