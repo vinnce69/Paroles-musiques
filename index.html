@@ -259,7 +259,7 @@
         }
 
         /* =====================================================================
-           4. BARRE DE PROGRESSION (REPÈRES QCM & CURSEURS / ZONES RADAR)
+           4. BARRE DE PROGRESSION INTERACTIVE (CURSEUR SCRUBBER + REPÈRES)
            ===================================================================== */
         .bloc-chronometre {
             margin-top: 18px;
@@ -273,6 +273,15 @@
             color: var(--couleur-texte-doux);
             margin-bottom: 16px;
             font-variant-numeric: tabular-nums;
+        }
+
+        /* Zone tactile élargie pour faciliter le toucher sur mobile */
+        .zone-tactile-piste {
+            position: relative;
+            padding: 10px 0;
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
         }
 
         .piste-progression {
@@ -290,8 +299,32 @@
             width: 0%;
             background: linear-gradient(90deg, #fb7185, #fbbf24);
             border-radius: 99px;
-            transition: width 0.1s linear;
+            transition: width 0.08s linear;
             z-index: 2;
+        }
+
+        /* Curseur rond déplaçable à l'extrémité de la barre */
+        .poignee-curseur-lecture {
+            position: absolute;
+            right: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff1f2;
+            border: 3px solid var(--couleur-principale);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+            transition: transform 0.15s ease;
+        }
+
+        .zone-tactile-piste:hover .poignee-curseur-lecture,
+        .zone-tactile-piste.en-glissement .poignee-curseur-lecture {
+            transform: translateY(-50%) scale(1.22);
+        }
+
+        .zone-tactile-piste.en-glissement .remplissage-progression {
+            transition: none;
         }
 
         .conteneur-reperes {
@@ -583,16 +616,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 10px;
         }
 
-        @media (max-width: 440px) {
-            .barre-controles {
-                grid-template-columns: 1fr 1fr;
-            }
-            .barre-controles #btn-passer-question {
-                grid-column: span 2;
-            }
+        .barre-controles #btn-passer-question {
+            grid-column: span 3;
         }
 
         .liste-morceaux-accueil {
@@ -848,7 +876,7 @@
                     </div>
                 </div>
 
-                <!-- BARRE DE PROGRESSION AVEC REPÈRES / CURSEURS -->
+                <!-- BARRE DE PROGRESSION INTERACTIVE AVEC CURSEUR DE DÉPLACEMENT -->
                 <div class="bloc-chronometre">
                     <div class="ligne-temps">
                         <span id="texte-chrono">0:00 / 1:05</span>
@@ -856,9 +884,13 @@
                             Prochaine pause à 0:30
                         </span>
                     </div>
-                    <div class="piste-progression">
-                        <div id="remplissage-progression" class="remplissage-progression"></div>
-                        <div id="conteneur-reperes" class="conteneur-reperes"></div>
+                    <div id="zone-tactile-piste" class="zone-tactile-piste" title="Clique ou glisse pour avancer ou reculer dans le morceau">
+                        <div id="piste-progression" class="piste-progression">
+                            <div id="remplissage-progression" class="remplissage-progression">
+                                <div class="poignee-curseur-lecture"></div>
+                            </div>
+                            <div id="conteneur-reperes" class="conteneur-reperes"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -869,6 +901,9 @@
                     </button>
                     <button id="btn-reculer-10s" class="btn-secondaire">
                         ⏪ -10s
+                    </button>
+                    <button id="btn-avancer-10s" class="btn-secondaire">
+                        ⏩ +10s
                     </button>
                     <button id="btn-passer-question" class="btn-secondaire">
                         💭 Passer à la question
@@ -1245,7 +1280,8 @@
                     }
                 ]
             },
-             // --- QUIZ 3 ter-ter : Pilote PLK hamza (MODE QCM - CORRIGÉ : fichierMedia & pochetteUrl harmonisés) ---
+
+            // --- QUIZ 3 ter-ter : Pilote PLK hamza ---
             {
                 actif: true,
                 titre: "Pilote (ft. Hamza)",
@@ -1268,7 +1304,7 @@
                 ]
             },
 
-            // --- QUIZ 4 : GALATÉE - NEKFEU (MODE QCM - CORRIGÉ : fichierMedia & pochetteUrl harmonisés) ---
+            // --- QUIZ 4 : GALATÉE - NEKFEU (MODE QCM) ---
             {
                 actif: true,
                 titre: "Galatée (Quiz QCM)",
@@ -1397,6 +1433,7 @@
         let estEnLecture = false;
         let questionDejaRepondue = false;
         let timerPrincipal = null;
+        let enGlissementCurseur = false;
 
         // État spécifique au mode Radar
         let curseursRadarJoueur = [];
@@ -1419,6 +1456,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             construireListeAccueil();
             chargerPreferencesEtHistorique();
+            initialiserCurseurProgression();
 
             document.getElementById("btn-demarrer-tout").addEventListener("click", () => {
                 demarrerPartie(null);
@@ -1437,22 +1475,12 @@
 
             // Bouton Revenir en arrière de 10 secondes
             document.getElementById("btn-reculer-10s").addEventListener("click", () => {
-                const morceau = playlistMorceaux[indexMorceauActuel];
-                if (!morceau) return;
+                deplacerLectureDeDelta(-10);
+            });
 
-                const tempsActuel = obtenirTempsActuelMedia();
-                const plancher = morceau.debutSecondes || 0;
-                const nouvellePosition = Math.max(plancher, tempsActuel - 10);
-
-                if (morceau.modeJeu !== "radar" && phaseLecture === "en_pause") {
-                    phaseLecture = "vers_pause";
-                    cacherElement("overlay-pause");
-                    cacherElement("carte-question");
-                }
-
-                positionnerMediaASeconde(nouvellePosition);
-                reprendreLectureMedia();
-                document.getElementById("statut-lecture").textContent = `⏪ Retour de 10s (${formaterSecondes(nouvellePosition)})`;
+            // Bouton Avancer de 10 secondes
+            document.getElementById("btn-avancer-10s").addEventListener("click", () => {
+                deplacerLectureDeDelta(10);
             });
 
             // Bouton Passer à la question / Valider le radar
@@ -1579,6 +1607,112 @@
             videoEl.addEventListener("ended", () => gererFinNaturelleMedia());
             audioEl.addEventListener("ended", () => gererFinNaturelleMedia());
         });
+
+        // =====================================================================
+        // CURSEUR INTERACTIF SUR LA BARRE DE PROGRESSION + SAUT ±10S
+        // =====================================================================
+        function initialiserCurseurProgression() {
+            const zoneTactile = document.getElementById("zone-tactile-piste");
+            const piste = document.getElementById("piste-progression");
+
+            const calculerSecondeDepuisClientX = (clientX) => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return 0;
+
+                const rect = piste.getBoundingClientRect();
+                const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width)));
+                const debut = morceau.debutSecondes || 0;
+                const fin = obtenirFinTimelineMorceau(morceau);
+                return debut + ratio * Math.max(1, fin - debut);
+            };
+
+            const appliquerPositionCurseur = (clientX) => {
+                const morceau = playlistMorceaux[indexMorceauActuel];
+                if (!morceau) return;
+
+                const nouvelleSeconde = calculerSecondeDepuisClientX(clientX);
+                const debut = morceau.debutSecondes || 0;
+                const fin = obtenirFinTimelineMorceau(morceau);
+                const dureeTotale = Math.max(1, fin - debut);
+                const pourcent = Math.min(100, Math.max(0, ((nouvelleSeconde - debut) / dureeTotale) * 100));
+
+                document.getElementById("remplissage-progression").style.width = pourcent + "%";
+                document.getElementById("texte-chrono").textContent = `${formaterSecondes(nouvelleSeconde)} / ${formaterSecondes(fin)}`;
+
+                allerASecondeUtilisateur(nouvelleSeconde);
+            };
+
+            // Souris (PC)
+            zoneTactile.addEventListener("mousedown", (e) => {
+                enGlissementCurseur = true;
+                zoneTactile.classList.add("en-glissement");
+                appliquerPositionCurseur(e.clientX);
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!enGlissementCurseur) return;
+                appliquerPositionCurseur(e.clientX);
+            });
+
+            window.addEventListener("mouseup", () => {
+                if (!enGlissementCurseur) return;
+                enGlissementCurseur = false;
+                zoneTactile.classList.remove("en-glissement");
+            });
+
+            // Tactile (Téléphone / Tablette)
+            zoneTactile.addEventListener("touchstart", (e) => {
+                if (!e.touches || !e.touches.length) return;
+                enGlissementCurseur = true;
+                zoneTactile.classList.add("en-glissement");
+                appliquerPositionCurseur(e.touches[0].clientX);
+            }, { passive: true });
+
+            zoneTactile.addEventListener("touchmove", (e) => {
+                if (!enGlissementCurseur || !e.touches || !e.touches.length) return;
+                appliquerPositionCurseur(e.touches[0].clientX);
+            }, { passive: true });
+
+            zoneTactile.addEventListener("touchend", () => {
+                if (!enGlissementCurseur) return;
+                enGlissementCurseur = false;
+                zoneTactile.classList.remove("en-glissement");
+            });
+        }
+
+        function deplacerLectureDeDelta(deltaSecondes) {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau) return;
+
+            const tempsActuel = obtenirTempsActuelMedia();
+            const plancher = morceau.debutSecondes || 0;
+            const plafond = Math.max(plancher, obtenirFinTimelineMorceau(morceau) - 0.5);
+            const nouvellePosition = Math.min(plafond, Math.max(plancher, tempsActuel + deltaSecondes));
+
+            allerASecondeUtilisateur(nouvellePosition);
+            const fleche = deltaSecondes < 0 ? "⏪" : "⏩";
+            const signe = deltaSecondes < 0 ? "" : "+";
+            document.getElementById("statut-lecture").textContent = `${fleche} ${signe}${deltaSecondes}s (${formaterSecondes(nouvellePosition)})`;
+        }
+
+        function allerASecondeUtilisateur(nouvellePosition) {
+            const morceau = playlistMorceaux[indexMorceauActuel];
+            if (!morceau) return;
+
+            if (morceau.modeJeu !== "radar") {
+                const qActuelle = morceau.questions[indexQuestionDansMorceau];
+                if (qActuelle && nouvellePosition < qActuelle.pauseSecondes && phaseLecture === "en_pause") {
+                    phaseLecture = "vers_pause";
+                    cacherElement("overlay-pause");
+                    cacherElement("carte-question");
+                }
+            }
+
+            positionnerMediaASeconde(nouvellePosition);
+            if (!estEnLecture && phaseLecture !== "en_pause") {
+                reprendreLectureMedia();
+            }
+        }
 
         function construireListeAccueil() {
             const conteneur = document.getElementById("liste-morceaux-accueil");
@@ -2210,6 +2344,8 @@
             clearInterval(timerPrincipal);
 
             timerPrincipal = setInterval(() => {
+                if (enGlissementCurseur) return;
+
                 const morceau = playlistMorceaux[indexMorceauActuel];
                 if (!morceau) return;
 
