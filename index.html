@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- Indispensable pour l'adaptation sur téléphone (empêche le zoom involontaire au clic) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notre Playlist Quiz ✨ (QCM & Radar)</title>
+
+    <style>
+        /* =====================================================================
+           1. PERSONNALISATION DU DESIGN (AMBIANCE CHALEUREUSE & ROMANTIQUE)
+           ===================================================================== */
+        :root {
+            --couleur-fond: #181014;            /* Fond cacao / prune très doux et chaleureux */
+            --fond-carte: #24181e;              /* Fond des cartes velours sombre */
+            --couleur-bordure: #3d2833;         /* Bordures rose poudré sombre */
+            --couleur-principale: #fb7185;      /* Rose corail chaleureux */
+            --couleur-principale-claire: #fda4af;
+            --couleur-repere-pause: #fbbf24;    /* Doré miel chaleureux */
+            --couleur-radar: #f472b6;           /* Rose bonbon / magenta doux pour le Radar */
+            --couleur-texte: #fff1f2;           /* Blanc cassé rosé très doux */
+            --couleur-texte-doux: #d6b8c0;      /* Gris rosé chaleureux */
+            
+            /* Couleurs pour les réponses du quiz */
+            --couleur-succes: #34d399;          /* Vert menthe doux */
+            --couleur-erreur: #fb7185;          /* Corail doux */
+            --couleur-alerte: #fbbf24;          /* Ambre doré */
+            
+            --arrondi: 24px;                    /* Arrondi plus généreux et mignon */
+        }
+
+        /* =====================================================================
+           2. STYLE GÉNÉRAL & ADAPTATION MOBILE-FIRST
+           ===================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Nunito", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at top left, #2d1822 0%, #181014 55%, #1f1410 100%);
+            color: var(--couleur-texte);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 18px;
+            line-height: 1.55;
+        }
+
+        .conteneur {
+            width: 100%;
+            max-width: 580px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(36, 24, 30, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 14px 20px;
+            border-radius: var(--arrondi);
+            border: 1px solid var(--couleur-bordure);
+            box-shadow: 0 8px 24px rgba(251, 113, 133, 0.08);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.12rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--couleur-principale-claire);
+        }
+
+        .badge-score {
+            background: rgba(251, 113, 133, 0.16);
+            color: var(--couleur-principale-claire);
+            border: 1px solid rgba(251, 113, 133, 0.45);
+            padding: 6px 15px;
+            border-radius: 99px;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .carte {
+            background: var(--fond-carte);
+            border: 1px solid var(--couleur-bordure);
+            border-radius: var(--arrondi);
+            padding: 22px 20px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 228, 230, 0.03) inset;
+        }
+
+        .cache {
+            display: none !important;
+        }
+
+        /* =====================================================================
+           3. LECTEUR HYBRIDE (VIDÉO MP4 16:9 OU POCHETTE ALBUM + ÉGALISEUR)
+           ===================================================================== */
+        .scene-media {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #120b0e;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid var(--couleur-bordure);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scene-audio {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align
