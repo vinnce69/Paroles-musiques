@@ -2119,7 +2119,7 @@
 
             const listeMarqueursRates = curseursRadarJoueur.filter((c) => c.statut === "rate");
             const curseursRates = listeMarqueursRates.length;
-            const pointsGagnes = Math.max(0, Math.round((passagesTrouves - curseursRates * 0.5) * 10) / 10);
+            const pointsGagnes = Math.max(0, Math.round((passagesTrouves - curseursRates/5 * 0.5) * 10) / 10);
             score = Math.round((score + pointsGagnes) * 10) / 10;
             mettreAJourBadgeScore();
 
