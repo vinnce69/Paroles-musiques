@@ -1144,7 +1144,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 0,
                 questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
-                toleranceSecondes: 3,
+                toleranceSecondes: 2,
                 passagesCibles: [
                     {
                         debut: 32,
@@ -1187,7 +1187,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 0,
                 questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
-                toleranceSecondes: 3,
+                toleranceSecondes: 2,
                 passagesCibles: [
                     {
                         debut: 19,
@@ -1238,8 +1238,8 @@
                 couleurPochette: "#fb7185",
                 debutSecondes: 0,
                 finMorceauSecondes: 123.5,
-                questionRadar: "Place un repère dès que tu entends un passage qui te fait penser à nous ✨",
-                toleranceSecondes: 3,
+                questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
+                toleranceSecondes: 2,
                 passagesCibles: [
                     {
                         debut: 91,
@@ -1262,7 +1262,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 115.5,
                 questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
-                toleranceSecondes: 3,
+                toleranceSecondes: 2,
                 passagesCibles: [
                     {
                         debut: 30,
@@ -1315,7 +1315,7 @@
                 debutSecondes: 0,
                 finMorceauSecondes: 20,
                 questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
-                toleranceSecondes: 3,
+                toleranceSecondes: 2,
                 passagesCibles: [
                     {
                         debut: 10,
@@ -1327,7 +1327,7 @@
 
             // --- QUIZ 4 : GALATÉE - NEKFEU (MODE QCM) ---
             {
-                actif: true,
+                actif: false,
                 titre: "Galatée (Quiz QCM)",
                 artiste: "Nekfeu",
                 modeJeu: "qcm",
@@ -1372,32 +1372,22 @@
 
             // --- QUIZ 5 : NES ---
             {
-                actif: false,
+                actif: true,
                 titre: "Des pieds et des mains (Veridis Remix)",
                 artiste: "NeS (Veridis Project)",
-                modeJeu: "qcm",
+                modeJeu: "radar",
                 typeMedia: "mp4",
                 fichierMedia: "media/NES - Des pieds et des mains (Veridis Remix).mp4",
-                pochetteUrl: "",
                 couleurPochette: "#fb7185",
-                modeContinu: false,
-                tirageAleatoire: true,
-                nombreQuestionsAPoser: 1,
-                banqueQuestions: [
+                debutSecondes: 0,
+                finMorceauSecondes: 180,
+                questionRadar: "Place un repère dès que tu entends un passage qui me fait penser à toi",
+                toleranceSecondes: 2,
+                passagesCibles: [
                     {
-                        debutSecondes: 0,
-                        pauseSecondes: 120,
-                        repriseFinSecondes: 125,
-                        citation: "« J'ai vu quatre étoiles filantes... »",
-                        question: "Laquelle de ces paroles me fait (le plus) penser à toi ?",
-                        options: [
-                            "« J'ai vu quatre étoiles filantes j'ai fait quatre voeux où t'es dedans »",
-                            "« Toujours pas d'permis j'fais gaffe à l'empreinte carbonne, disquette »",
-                            "« J'ai une gueule de rital, j'parle pas trop italien j'connais que les insultes »",
-                            "« J'mérite la mer des caraïbes ou l'soleil des caraïbes »"
-                        ],
-                        bonneReponseIndex: 0,
-                        explication: "Une punchline romantique emblématique du morceau de NeS."
+                        debut: 55,
+                        fin: 58,
+                        paroles: "« J'ai vu quatre étoiles filantes j'ai fait quatres voeux où t'es dedans »"
                     }
                 ]
             },
@@ -1752,7 +1742,7 @@
                     : (chanson.typeMedia === "mp3" ? "🎵 Audio" : "🎛️ Démo");
 
                 const detailInfo = estRadar
-                    ? `${chanson.passagesCibles.length} segment${chanson.passagesCibles.length > 1 ? "s" : ""} à repérer (±${chanson.toleranceSecondes || 5}s)`
+                    ? `${chanson.passagesCibles.length} segment${chanson.passagesCibles.length > 1 ? "s" : ""} à repérer (±${chanson.toleranceSecondes || 2}s)`
                     : `${Math.min(chanson.nombreQuestionsAPoser, chanson.banqueQuestions.length)} question(s)`;
 
                 const btn = document.createElement("button");
@@ -1815,7 +1805,7 @@
                         debutSecondes: chanson.debutSecondes ?? 0,
                         finMorceauSecondes: chanson.finMorceauSecondes || 0,
                         questionRadar: chanson.questionRadar || "Place un repère au moment recherché !",
-                        toleranceSecondes: chanson.toleranceSecondes ?? 5,
+                        toleranceSecondes: chanson.toleranceSecondes ?? 2,
                         passagesCibles: cibles
                     });
                 } else {
@@ -2090,7 +2080,7 @@
             mettreEnPauseMedia();
             document.getElementById("statut-lecture").textContent = "📊 Correction du radar";
 
-            const tolerance = morceau.toleranceSecondes ?? 5;
+            const tolerance = morceau.toleranceSecondes ?? 2;
             const cibles = morceau.passagesCibles;
 
             // Étape 1 : Vérifier chaque curseur du joueur
